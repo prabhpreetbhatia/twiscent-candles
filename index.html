@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Twiscent Candles — Shop</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="brand">
+        <div class="logo">🕯️</div>
+        <div class="brand-text">
+          <h1>Twiscent Candles</h1>
+          <p>Hand-poured • Clean burn • Gift-ready</p>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a href="#shop">Shop</a>
+        <a href="#cart">Cart</a>
+        <a href="#upi">UPI</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-left">
+        <h2>Pick your candle, set quantity, pay instantly via UPI.</h2>
+        <p>
+          Use <b>+ / −</b> to change count, <b>Add to Cart</b> to build your order,
+          or <b>Buy Now</b> to pay for that item immediately.
+        </p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#shop">Browse Candles</a>
+          <a class="btn ghost" href="#cart">View Cart</a>
+        </div>
+
+        <div class="badges">
+          <span class="badge">Soy blend</span>
+          <span class="badge">Long-lasting</span>
+          <span class="badge">Gift packaging</span>
+        </div>
+      </div>
+
+      <div class="hero-right card">
+        <h3>How payment works</h3>
+        <ul>
+          <li>Cart total auto-calculates</li>
+          <li>UPI link uses your UPI ID + total amount</li>
+          <li>Works best on mobile with UPI apps installed</li>
+        </ul>
+        <p class="muted small">Set your UPI ID below.</p>
+      </div>
+    </section>
+
+    <!-- ===== UPI SETTINGS ===== -->
+    <section id="upi" class="section">
+      <div class="section-title">
+        <h2>UPI Setup</h2>
+        <p>Enter your UPI ID once. It’s saved in browser (localStorage).</p>
+      </div>
+
+      <div class="card upi-card">
+        <div class="upi-grid">
+          <label class="field">
+            <span>UPI ID</span>
+            <input id="upiId" type="text" placeholder="example@okhdfcbank" autocomplete="off" />
+          </label>
+
+          <label class="field">
+            <span>Payee Name</span>
+            <input id="payeeName" type="text" value="Twiscent Candles" autocomplete="off" />
+          </label>
+
+          <button class="btn primary" id="saveUpi">Save</button>
+
+          <div class="muted small">
+            Tip: Use a UPI that supports collecting payments, e.g. <code>yourname@okaxis</code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SHOP ===== -->
+    <section id="shop" class="section">
+      <div class="section-title">
+        <h2>Shop (6 Candles)</h2>
+        <p>Adjust quantity, then Add to Cart or Buy Now.</p>
+      </div>
+
+      <div class="products" id="products"></div>
+    </section>
+
+    <!-- ===== CART ===== -->
+    <section id="cart" class="section">
+      <div class="section-title">
+        <h2>Your Cart</h2>
+        <p>Quantity changes here update total instantly.</p>
+      </div>
+
+      <div class="card cart">
+        <div class="cart-top">
+          <div class="cart-summary">
+            <div class="kpi">
+              <div class="kpi-label">Items</div>
+              <div class="kpi-value" id="cartItems">0</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Total</div>
+              <div class="kpi-value">₹<span id="cartTotal">0</span></div>
+            </div>
+          </div>
+
+          <div class="cart-actions">
+            <button class="btn ghost" id="clearCart">Clear Cart</button>
+            <a class="btn primary" id="payUpiBtn" href="#" role="button">Pay via UPI</a>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div id="cartEmpty" class="muted">Your cart is empty. Add some candles 🙂</div>
+        <div id="cartList" class="cart-list"></div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p class="muted small">
+        © Twiscent Candles • Static site on GitHub Pages • HTML/CSS/Vanilla JS
+      </p>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
