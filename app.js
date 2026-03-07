@@ -4,32 +4,95 @@
 */
 
 const PRODUCTS = [
-  { id: "c1", name: "Eucalyptus Mint", emoji: "🌿", price: 199, note: "Fresh • Clean • Spa vibe" },
-  { id: "c2", name: "Vanilla Bean", emoji: "🍦", price: 249, note: "Warm • Sweet • Classic" },
-  { id: "c3", name: "Rose Oud",        emoji: "🌹", price: 299, note: "Luxury • Bold • Date night" },
-  { id: "c4", name: "Mocha Latte",     emoji: "☕", price: 279, note: "Coffee • Cozy • Winter" },
-  { id: "c5", name: "Fresh Linen",     emoji: "🧺", price: 229, note: "Soft • Clean • Airy" },
-  { id: "c6", name: "Lavender Calm",   emoji: "🌸", price: 219, note: "Relaxing • Floral • Sleep" },
+  {
+    id: "c1",
+    name: "Pastel Daisy Garden Bowl",
+    image: "photos/c1.jpeg",
+    price: 699,
+    note: "Colorful daisy candles arranged in a decorative bowl"
+  },
+  {
+    id: "c2",
+    name: "Purple Congrats Heart Candle",
+    image: "photos/c2.jpeg",
+    price: 349,
+    note: "Perfect small congratulation gift candle"
+  },
+  {
+    id: "c3",
+    name: "Twin Bloom Bowl Set",
+    image: "photos/c3.jpeg",
+    price: 749,
+    note: "Pair of pastel floral candles in textured bowls"
+  },
+  {
+    id: "c4",
+    name: "Couple Sculpture Gift Set",
+    image: "photos/c4.jpeg",
+    price: 899,
+    note: "Romantic couple sculpture candle set"
+  },
+  {
+    id: "c5",
+    name: "Pink Rose Glass Bowl",
+    image: "photos/c5.jpeg",
+    price: 249,
+    note: "Elegant rose shaped candle in glass bowl"
+  },
+  {
+    id: "c6",
+    name: "25th Birthday Keepsake",
+    image: "photos/c6.jpeg",
+    price: 399,
+    note: "Birthday candle centerpiece for celebrations"
+  },
+  {
+    id: "c7",
+    name: "You & Me Twin Heart Candle",
+    image: "photos/c7.jpeg",
+    price: 499,
+    note: "Cute couple themed heart candle"
+  },
+  {
+    id: "c8",
+    name: "Blush Rose Pillar Candle",
+    image: "photos/c8.jpeg",
+    price: 329,
+    note: "Delicate pillar candle with rose carvings"
+  },
+  {
+    id: "c9",
+    name: "Mother's Day Floral Bowl",
+    image: "photos/c9.jpeg",
+    price: 799,
+    note: "Special floral bowl candle for Mother's Day"
+  }
 ];
 
 const LS_CART = "twiscent_cart_v1";
-const LS_UPI  = "twiscent_upi_v1";
+const LS_UPI = "twiscent_upi_v1";
 
-const elProducts   = document.getElementById("products");
-const elCartList   = document.getElementById("cartList");
-const elCartEmpty  = document.getElementById("cartEmpty");
-const elCartItems  = document.getElementById("cartItems");
-const elCartTotal  = document.getElementById("cartTotal");
-const elPayBtn     = document.getElementById("payUpiBtn");
-const elClearCart  = document.getElementById("clearCart");
+const elProducts = document.getElementById("products");
+const elCartList = document.getElementById("cartList");
+const elCartEmpty = document.getElementById("cartEmpty");
+const elCartItems = document.getElementById("cartItems");
+const elCartTotal = document.getElementById("cartTotal");
+const elPayBtn = document.getElementById("payUpiBtn");
+const elClearCart = document.getElementById("clearCart");
 
-const elUpiId      = document.getElementById("upiId");
-const elPayeeName  = document.getElementById("payeeName");
-const elSaveUpi    = document.getElementById("saveUpi");
+const elUpiId = document.getElementById("upiId");
+const elPayeeName = document.getElementById("payeeName");
+const elSaveUpi = document.getElementById("saveUpi");
+
+// Lightbox elements
+const elLightbox = document.getElementById("imageLightbox");
+const elLightboxImg = document.getElementById("lightboxImg");
+const elLightboxCaption = document.getElementById("lightboxCaption");
+const elLightboxClose = document.getElementById("lightboxClose");
 
 // ---------- State ----------
-let cart = loadCart(); // { [productId]: qty }
-let upi = loadUpi();   // { upiId, payeeName }
+let cart = loadCart();
+let upi = loadUpi();
 
 // ---------- Init ----------
 renderProducts();
@@ -38,12 +101,20 @@ hydrateUpiInputs();
 wireUpiSave();
 wireClearCart();
 wirePayButton();
+wireLightbox();
 
 function renderProducts() {
-  elProducts.innerHTML = PRODUCTS.map(p => productCardHTML(p)).join("");
+  elProducts.innerHTML = PRODUCTS.map((p) => productCardHTML(p)).join("");
 
-  // Qty + / - handlers (shop)
   elProducts.addEventListener("click", (e) => {
+    const imgBtn = e.target.closest("[data-preview]");
+    if (imgBtn) {
+      const pid = imgBtn.dataset.preview;
+      const product = PRODUCTS.find((x) => x.id === pid);
+      if (product) openLightbox(product.image, product.name);
+      return;
+    }
+
     const btn = e.target.closest("[data-action]");
     if (!btn) return;
 
@@ -60,7 +131,6 @@ function renderProducts() {
     input.value = String(val);
   });
 
-  // Add to Cart / Buy Now (shop)
   elProducts.addEventListener("click", (e) => {
     const add = e.target.closest("[data-add]");
     const buy = e.target.closest("[data-buy]");
@@ -70,7 +140,7 @@ function renderProducts() {
     const qtyInput = elProducts.querySelector(`input[data-qty="${pid}"]`);
     const qty = clampInt(parseInt(qtyInput?.value || "1", 10), 1, 99);
 
-    const product = PRODUCTS.find(x => x.id === pid);
+    const product = PRODUCTS.find((x) => x.id === pid);
     if (!product) return;
 
     if (add) {
@@ -82,22 +152,22 @@ function renderProducts() {
     }
 
     if (buy) {
-      // pay for this item only
       const amount = product.price * qty;
       const tn = `Twiscent Order - ${product.name} x${qty}`;
       const url = buildUpiUrl(amount, tn);
+
       if (!url) {
-        toast("Set UPI ID first (scroll to UPI Setup)");
+        toast("Set UPI ID first");
         location.hash = "#upi";
         return;
       }
+
       window.location.href = url;
     }
   });
 
-  // manual input validation
   elProducts.addEventListener("change", (e) => {
-    const input = e.target.closest('input[data-qty]');
+    const input = e.target.closest("input[data-qty]");
     if (!input) return;
     input.value = String(clampInt(parseInt(input.value || "1", 10), 1, 99));
   });
@@ -107,11 +177,17 @@ function productCardHTML(p) {
   return `
     <article class="product card">
       <div class="p-top">
-        <div class="p-emoji">${p.emoji}</div>
-        <div>
+        <button class="p-image-btn" type="button" data-preview="${p.id}" aria-label="Preview ${escapeHtml(p.name)}">
+          <div class="p-image">
+            <img src="${p.image}" alt="${escapeHtml(p.name)}">
+          </div>
+        </button>
+
+        <div class="p-info">
           <h3>${escapeHtml(p.name)}</h3>
           <p class="muted small">${escapeHtml(p.note)}</p>
         </div>
+
         <div class="price">₹${p.price}</div>
       </div>
 
@@ -131,7 +207,7 @@ function productCardHTML(p) {
 
 // ---------- Cart UI ----------
 function renderCart() {
-  const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
+  const entries = Object.entries(cart).filter(([, qty]) => qty > 0);
 
   if (entries.length === 0) {
     elCartEmpty.style.display = "block";
@@ -147,39 +223,50 @@ function renderCart() {
   elCartItems.textContent = String(itemsCount);
   elCartTotal.textContent = String(total);
 
-  // Update Pay button link target dynamically
   const payUrl = buildUpiUrl(total, `Twiscent Cart Order - ${itemsCount} item(s)`);
   elPayBtn.href = payUrl || "#upi";
   elPayBtn.setAttribute("aria-disabled", payUrl ? "false" : "true");
 
-  // wire row actions (delegation)
   elCartList.onclick = (e) => {
+    const thumbBtn = e.target.closest("[data-cart-preview]");
+    if (thumbBtn) {
+      const pid = thumbBtn.dataset.cartPreview;
+      const product = PRODUCTS.find((x) => x.id === pid);
+      if (product) openLightbox(product.image, product.name);
+      return;
+    }
+
     const act = e.target.closest("[data-cart-action]");
     if (!act) return;
 
     const action = act.dataset.cartAction;
     const pid = act.dataset.id;
-    const product = PRODUCTS.find(x => x.id === pid);
+    const product = PRODUCTS.find((x) => x.id === pid);
     if (!product) return;
 
     if (action === "dec") {
       cart[pid] = Math.max(1, (cart[pid] || 1) - 1);
-      saveCart(); renderCart();
+      saveCart();
+      renderCart();
     }
+
     if (action === "inc") {
       cart[pid] = Math.min(99, (cart[pid] || 1) + 1);
-      saveCart(); renderCart();
+      saveCart();
+      renderCart();
     }
+
     if (action === "remove") {
       delete cart[pid];
-      saveCart(); renderCart();
+      saveCart();
+      renderCart();
       toast(`Removed ${product.name}`);
     }
   };
 }
 
 function cartRowHTML(pid, qty) {
-  const p = PRODUCTS.find(x => x.id === pid);
+  const p = PRODUCTS.find((x) => x.id === pid);
   if (!p) return "";
 
   const lineTotal = p.price * qty;
@@ -187,7 +274,11 @@ function cartRowHTML(pid, qty) {
   return `
     <div class="cart-row">
       <div class="left">
-        <div class="emoji">${p.emoji}</div>
+        <button class="cart-thumb-btn" type="button" data-cart-preview="${p.id}" aria-label="Preview ${escapeHtml(p.name)}">
+          <div class="cart-thumb">
+            <img src="${p.image}" alt="${escapeHtml(p.name)}">
+          </div>
+        </button>
         <div>
           <h4>${escapeHtml(p.name)}</h4>
           <div class="sub">₹${p.price} each</div>
@@ -211,19 +302,60 @@ function cartRowHTML(pid, qty) {
   `;
 }
 
+// ---------- Lightbox ----------
+function wireLightbox() {
+  if (!elLightbox || !elLightboxImg || !elLightboxCaption || !elLightboxClose) return;
+
+  elLightboxClose.addEventListener("click", closeLightbox);
+
+  elLightbox.addEventListener("click", (e) => {
+    if (e.target === elLightbox) {
+      closeLightbox();
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && elLightbox.classList.contains("open")) {
+      closeLightbox();
+    }
+  });
+}
+
+function openLightbox(src, caption) {
+  if (!elLightbox || !elLightboxImg || !elLightboxCaption) return;
+
+  elLightboxImg.src = src;
+  elLightboxImg.alt = caption || "Product image";
+  elLightboxCaption.textContent = caption || "";
+  elLightbox.classList.add("open");
+  document.body.classList.add("no-scroll");
+}
+
+function closeLightbox() {
+  if (!elLightbox || !elLightboxImg || !elLightboxCaption) return;
+
+  elLightbox.classList.remove("open");
+  elLightboxImg.src = "";
+  elLightboxImg.alt = "";
+  elLightboxCaption.textContent = "";
+  document.body.classList.remove("no-scroll");
+}
+
 // ---------- UPI ----------
 function hydrateUpiInputs() {
-  if (upi.upiId) elUpiId.value = upi.upiId;
-  if (upi.payeeName) elPayeeName.value = upi.payeeName;
+  if (upi.upiId && elUpiId) elUpiId.value = upi.upiId;
+  if (upi.payeeName && elPayeeName) elPayeeName.value = upi.payeeName;
 }
 
 function wireUpiSave() {
+  if (!elSaveUpi) return;
+
   elSaveUpi.addEventListener("click", () => {
     const upiId = (elUpiId.value || "").trim();
     const payeeName = (elPayeeName.value || "Twiscent Candles").trim();
 
     if (!upiId || !upiId.includes("@")) {
-      toast("Please enter a valid UPI ID (example@bank)");
+      toast("Please enter a valid UPI ID");
       elUpiId.focus();
       return;
     }
@@ -236,17 +368,21 @@ function wireUpiSave() {
 }
 
 function wirePayButton() {
+  if (!elPayBtn) return;
+
   elPayBtn.addEventListener("click", (e) => {
     const { total } = cartTotals();
+
     if (total <= 0) {
       e.preventDefault();
       toast("Cart is empty");
       return;
     }
-    const url = buildUpiUrl(total, `Twiscent Cart Order`);
+
+    const url = buildUpiUrl(total, "Twiscent Cart Order");
     if (!url) {
       e.preventDefault();
-      toast("Set UPI ID first (scroll to UPI Setup)");
+      toast("Set UPI ID first");
       location.hash = "#upi";
     }
   });
@@ -254,6 +390,8 @@ function wirePayButton() {
 
 // ---------- Clear Cart ----------
 function wireClearCart() {
+  if (!elClearCart) return;
+
   elClearCart.addEventListener("click", () => {
     cart = {};
     saveCart();
@@ -270,12 +408,14 @@ function cartTotals() {
   for (const [pid, qty] of Object.entries(cart)) {
     const q = clampInt(qty, 0, 99);
     if (!q) continue;
-    const p = PRODUCTS.find(x => x.id === pid);
+
+    const p = PRODUCTS.find((x) => x.id === pid);
     if (!p) continue;
 
     itemsCount += q;
     total += p.price * q;
   }
+
   return { itemsCount, total };
 }
 
@@ -289,7 +429,6 @@ function buildUpiUrl(amount, note) {
   const cu = "INR";
   const tn = encodeURIComponent(note || "Twiscent Candles Order");
 
-  // UPI deep link format
   return `upi://pay?pa=${pa}&pn=${pn}&am=${am}&cu=${cu}&tn=${tn}`;
 }
 
@@ -333,11 +472,15 @@ let toastTimer = null;
 function toast(msg) {
   clearTimeout(toastTimer);
 
+  const oldToast = document.querySelector(".toast");
+  if (oldToast) oldToast.remove();
+
   const el = document.createElement("div");
   el.className = "toast";
   el.textContent = msg;
 
   document.body.appendChild(el);
+
   toastTimer = setTimeout(() => {
     el.remove();
   }, 2200);
